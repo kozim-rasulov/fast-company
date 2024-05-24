@@ -1,15 +1,18 @@
 import { useState } from "react";
-import api from "../api";
+import User from "./user";
+import Pagination from "./pagination";
+import { paginate } from "../utils/paginate";
 
-const Users = () => {
-  const [users, setUsers] = useState(api.users.fetchAll());
-
-  const handleDelete = (userId) => {
-    setUsers((users) => users.filter((user) => user._id !== userId));
+const Users = ({ users, ...other }) => {
+  const count = users.length;
+  const pageSize = 4;
+  const [currentPage, setCurrentPage] = useState(1);
+  const handlePageChange = (pageIndex) => {
+    setCurrentPage(pageIndex);
   };
-
-  const UsersTable = () => {
-    return (
+  const userCrop = paginate(users, currentPage, pageSize);
+  return (
+    <>
       <table className="table text-center">
         <thead>
           <tr>
@@ -18,47 +21,26 @@ const Users = () => {
             <th scope="col">Профессия</th>
             <th scope="col">Встретился, раз</th>
             <th scope="col">Оценка</th>
+            <th scope="col">Избранные</th>
             <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr key={user._id}>
-              <th scope="row">{user.name}</th>
-              <td>
-                {user.qualities.map((qualities, id) => {
-                  return (
-                    <span
-                      key={id}
-                      className={`badge bg-${qualities.color} m-1`}
-                    >
-                      {qualities.name}
-                    </span>
-                  );
-                })}
-              </td>
-              <td>{user.profession.name}</td>
-              <td>{user.completedMeetings}</td>
-              <td>{user.rate} / 5</td>
-              <td onClick={() => handleDelete(user._id)}>
-                <span className="btn btn-danger">Удалить</span>
-              </td>
-            </tr>
+          {userCrop.map((user) => (
+            <User key={user._id} {...user} {...other} />
           ))}
         </tbody>
       </table>
-    );
-  };
-
-  return (
-    <>
-      <h1 className={`btn btn-${users.length ? "primary" : "danger"}`}>
-        {users.length
-          ? `${users.length} человек тусанет с тобой сегодня`
-          : "Никто с тобой не тусанёт"}
-      </h1>
-      {users.length ? <UsersTable /> : null}
+      <Pagination
+        itemsCount={count}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        currentPage={currentPage}
+      />
     </>
   );
 };
+
+
+
 export default Users;
